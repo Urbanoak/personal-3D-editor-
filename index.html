@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>3D Scene Editor</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link rel="apple-touch-icon" href="images/icon.png">
+		<link rel="manifest" href="manifest.json">
+		<link rel="shortcut icon" href="favicon_white.ico" media="(prefers-color-scheme: dark)"/>
+		<link rel="shortcut icon" href="favicon.ico" media="(prefers-color-scheme: light)" />
+		<style>
+			/* main.css content */
+			:root {
+				color-scheme: light dark;
+			}
+			[hidden] {
+				display: none !important;
+			}
+			body {
+				font-family: Helvetica, Arial, sans-serif;
+				font-size: 14px;
+				margin: 0;
+				overflow: hidden;
+			}
+			hr {
+				border: 0;
+				border-top: 1px solid #ccc;
+			}
+			button {
+				position: relative;
+				color: #555;
+				background-color: #ddd;
+				border: 0;
+				margin: 0;
+				padding: 5px 8px;
+				font-size: 12px;
+				text-transform: uppercase;
+				cursor: pointer;
+				outline: none;
+			}
+			button:hover {
+				background-color: #fff;
+			}
+			button.selected {
+				background-color: #fff;
+			}
+			input, textarea {
+				border: 1px solid transparent;
+				color: #444;
+				vertical-align: middle;
+			}
+			input[type="color"]::-webkit-color-swatch-wrapper {
+				padding: 0;
+			}
+			input[type="color"]::-webkit-color-swatch {
+				border: none;
+			}
+			input.Number {
+				color: #08f !important;
+				font-size: 12px;
+				border: 0;
+				padding: 2px;
+			}
+			select {
+				color: #666;
+				background-color: #ddd;
+				border: 0;
+				text-transform: uppercase;
+				cursor: pointer;
+				outline: none;
+			}
+			select:hover {
+				background-color: #fff;
+			}
+			.Panel {
+				-moz-user-select: none;
+				-webkit-user-select: none;
+				-ms-user-select: none;
+				user-select: none;
+				color: #888;
+				padding: 10px;
+				border-top: 1px solid #ccc;
+			}
+			.TabbedPanel {
+				-moz-user-select: none;
+				-webkit-user-select: none;
+				-ms-user-select: none;
+				user-select: none;
+				position: relative;
+				display: block;
+				width: 100%;
+				min-width: 335px;
+			}
+			.TabbedPanel .Tabs {
+				position: relative;
+				z-index: 1;
+				display: block;
+				width: 100%;
+				white-space: pre;
+				overflow: hidden;
+				overflow-x: auto;
+				background-color: #ddd;
+				border-top: 1px solid #ccc;
+			}
+			.TabbedPanel .Tab {
+				color: #aaa;
+				border-right: 1px solid #ccc;
+				padding: 10px 9px;
+				text-transform: uppercase;
+			}
+			.TabbedPanel .Tab.selected {
+				color: #888;
+				background-color: #eee;
+			}
+			.TabbedPanel .Panels {
+				position: absolute;
+				top: 40px;
+				display: block;
+				width: 100%;
+			}
+			.Listbox {
+				color: #444;
+				background-color: #fff;
+				padding: 0;
+				width: 100%;
+				min-height: 180px;
+				font-size: 12px;
+				cursor: default;
+				overflow: auto;
+			}
+			.Listbox .ListboxItem {
+				padding: 6px;
+				color: #666;
+				white-space: nowrap;
+			}
+			.Listbox .ListboxItem.active {
+				background-color: rgba(0,0,0,0.04);
+			}
+			#resizer {
+				position: absolute;
+				z-index: 2;
+				top: 32px;
+				right: 350px;
+				width: 5px;
+				bottom: 0;
+				transform: translateX(2.5px);
+				cursor: col-resize;
+			}
+			#resizer:hover {
+				background-color: #08f8;
+				transition-property: background-color;
+				transition-delay: 0.1s;
+				transition-duration: 0.2s;
+			}
+			#resizer:active {
+				background-color: #08f;
+			}
+			#viewport {
+				position: absolute;
+				top: 32px;
+				left: 0;
+				right: 350px;
+				bottom: 0;
+			}
+			#menubar {
+				position: absolute;
+				width: 100%;
+				height: 32px;
+				background: #eee;
+				padding: 0;
+				margin: 0;
+				right: 0;
+				top: 0;
+			}
+			#menubar .menu {
+				float: left;
+				cursor: pointer;
+				padding-right: 8px;
+			}
+			#menubar .menu .title {
+				display: inline-block;
+				color: #888;
+				margin: 0;
+				padding: 8px;
+				line-height: 16px;
+			}
+			#menubar .menu .options {
+				position: fixed;
+				z-index: 1;
+				display: none;
+				padding: 5px 0;
+				background: #eee;
+				min-width: 150px;
+				max-height: calc(100vh - 80px);
+				overflow: auto;
+			}
+			#menubar .menu:hover .options {
+				display: block;
+				box-shadow: 0 10px 10px -5px #00000033;
+			}
+			#menubar .menu .options .option {
+				color: #666;
+				background-color: transparent;
+				padding: 5px 10px;
+				margin: 0 !important;
+			}
+			#menubar .menu .options .option:hover {
+				color: #fff;
+				background-color: #08f;
+			}
+			#sidebar {
+				position: absolute;
+				right: 0;
+				top: 32px;
+				bottom: 320px;
+				width: 350px;
+				background: #eee;
+				overflow: auto;
+				overflow-x: hidden;
+			}
+			#sidebar .Row {
+				display: flex;
+				align-items: center;
+				min-height: 24px;
+				margin-bottom: 10px;
+			}
+			#sidebar .Row .Label {
+				width: 120px;
+			}
+			#toolbar {
+				position: absolute;
+				left: 10px;
+				top: 42px;
+				width: 32px;
+				background: #eee;
+				text-align: center;
+			}
+			#toolbar button {
+				height: 32px;
+			}
+			.Outliner {
+				color: #444;
+				background-color: #fff;
+				padding: 0;
+				width: 100%;
+				height: 180px;
+				font-size: 12px;
+				cursor: default;
+				overflow: auto;
+				resize: vertical;
+				outline: none !important;
+			}
+			.Outliner .option {
+				padding: 4px;
+				color: #666;
+				white-space: nowrap;
+			}
+			.Outliner .option:hover {
+				background-color: rgba(0,0,0,0.02);
+			}
+			.Outliner .option.active {
+				background-color: rgba(0,0,0,0.04);
+			}
+			@media (prefers-color-scheme: dark) {
+				button {
+					color: #aaa;
+					background-color: #222;
+				}
+				button:hover {
+					color: #ccc;
+					background-color: #444;
+				}
+				input, textarea, select {
+					background-color: #222;
+					color: #888;
+				}
+				select:hover {
+					background-color: #444;
+				}
+				#menubar, #sidebar, #toolbar {
+					background-color: #111;
+				}
+				#sidebar .Panel {
+					border-top: 1px solid #222;
+				}
+				.TabbedPanel .Tabs {
+					background-color: #1b1b1b;
+					border-top: 1px solid #222;
+				}
+				.TabbedPanel .Tab {
+					color: #555;
+					border-right: 1px solid #222;
+				}
+				.TabbedPanel .Tab.selected {
+					color: #888;
+					background-color: #111;
+				}
+				.Outliner, .Listbox {
+					background: #222;
+					color: #888;
+				}
+				.Outliner .option:hover, .Listbox .ListboxItem:hover {
+					background-color: rgba(21,60,94,0.5);
+				}
+				.Outliner .option.active, .Listbox .ListboxItem.active {
+					background-color: rgba(21,60,94,1);
+				}
+			}
+			@media (max-width: 600px) {
+				#resizer {
+					display: none;
+				}
+				#viewport {
+					right: 0;
+					bottom: 320px;
+				}
+				#sidebar {
+					width: 100%;
+					top: auto;
+					bottom: 0;
+					height: 320px;
+				}
+			}
+			.notification {
+				position: fixed;
+				bottom: 20px;
+				right: 20px;
+				background: #eee;
+				border-left: 4px solid #08f;
+				padding: 12px 20px;
+				color: #666;
+				transform: translateX(120%);
+				transition: transform 0.3s ease;
+				z-index: 1000;
+			}
+			.notification.show {
+				transform: translateX(0);
+			}
+			.notification.error {
+				border-left-color: #f00;
+				background: rgba(255,0,0,0.05);
+			}
+			.loading-indicator {
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				display: none;
+				color: #666;
+				z-index: 10;
+			}
+			.modal {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background: rgba(0,0,0,0.7);
+				display: none;
+				align-items: center;
+				justify-content: center;
+				z-index: 1000;
+			}
+			.modal-content {
+				background: #eee;
+				padding: 20px;
+				width: 80%;
+				max-width: 600px;
+				max-height: 80vh;
+				overflow-y: auto;
+				color: #666;
+			}
+			.slider-container {
+				display: flex;
+				align-items: center;
+				margin-bottom: 10px;
+			}
+			.slider-container label {
+				width: 120px;
+				color: #888;
+			}
+			.slider-container input[type="range"] {
+				flex-grow: 1;
+				background: #ddd;
+				height: 5px;
+				-webkit-appearance: none;
+			}
+			.slider-container input[type="range"]::-webkit-slider-thumb {
+				-webkit-appearance: none;
+				width: 12px;
+				height: 12px;
+				background: #08f;
+				border-radius: 50%;
+				cursor: pointer;
+			}
+			.slider-container span {
+				width: 50px;
+				text-align: right;
+				color: #666;
+			}
+			.color-picker {
+				display: flex;
+				gap: 8px;
+				margin-top: 8px;
+			}
+			.color-option {
+				width: 20px;
+				height: 20px;
+				border-radius: 50%;
+				cursor: pointer;
+				border: 1px solid #ccc;
+			}
+			.color-option.active {
+				border-color: #08f;
+			}
+			.bottom-controls {
+				position: absolute;
+				bottom: 0;
+				left: 0;
+				right: 350px;
+				height: 320px;
+				background: #eee;
+				overflow-y: auto;
+				border-top: 1px solid #ccc;
+			}
+			.header-bar {
+				position: absolute;
+				top: 0;
+				left: 0;
+				right: 0;
+				background: #eee;
+				padding: 10px;
+				display: flex;
+				justify-content: space-between;
+				border-bottom: 1px solid #ccc;
+				z-index: 5;
+			}
+			.stats {
+				position: absolute;
+				bottom: 10px;
+				left: 10px;
+				font-size: 12px;
+				color: #666;
+			}
+			@media (prefers-color-scheme: dark) {
+				.notification, .modal-content, .bottom-controls, .header-bar {
+					background: #222;
+					color: #888;
+				}
+				.notification.error {
+					background: rgba(255,0,0,0.1);
+				}
+				.bottom-controls, .header-bar {
+					border-color: #222;
+				}
+			}
+			@media (max-width: 600px) {
+				.bottom-controls {
+					right: 0;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<!-- Notification -->
+		<div id="notification" class="notification"></div>
+		<!-- Loading Indicator -->
+		<div id="loading-indicator" class="loading-indicator">Loading...</div>
+		<!-- Help Modal -->
+		<div id="modal" class="modal">
+			<div class="modal-content">
+				<button class="modal-close">Close</button>
+				<h2>3D Scene Editor Help</h2>
+				<h3>Navigation</h3>
+				<p>• <strong>Rotate</strong>: Click and drag to orbit.</p>
+				<p>• <strong>Zoom</strong>: Scroll to zoom in/out.</p>
+				<p>• <strong>Pan</strong>: Shift + drag to pan.</p>
+				<h3>Controls</h3>
+				<p>• <strong>Objects</strong>: Select, center, duplicate, or delete objects.</p>
+				<p>• <strong>Shapes</strong>: Add Cube, Sphere, Cone, Torus, Knot, Cylinder.</p>
+				<p>• <strong>Grid</strong>: Switch grid types and adjust settings.</p>
+				<p>• <strong>Environment</strong>: Choose lighting presets (Studio, Sunset, Night, Forest).</p>
+				<p>• <strong>Modes</strong>: Switch between Model, Material, and Lighting modes.</p>
+				<p>• <strong>Undo/Redo</strong>: Revert or reapply actions.</p>
+				<p>• <strong>Import/Export</strong>: Load .gltf/.glb models or export the scene.</p>
+			</div>
+		</div>
+
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "https://unpkg.com/three@0.153.0/build/three.module.js",
+					"three/addons/": "https://unpkg.com/three@0.153.0/examples/jsm/"
+				}
+			}
+		</script>
+		<script src="https://unpkg.com/three@0.153.0/examples/jsm/libs/draco/draco_encoder.js"></script>
+		<script src="https://unpkg.com/signals@1.0.0/dist/signals.min.js"></script>
+
+		<script type="module">
+			import * as THREE from 'three';
+			import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+			import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+			import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+			import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+			import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+			import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+			import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+			import { GLTFExporter } from 'three/addons/exporters/GLTFExporter.js';
+			import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+
+			// Signals
+			const Signals = window.signals.Signal;
+			const signals = {
+				objectSelected: new Signals(),
+				objectAdded: new Signals(),
+				objectRemoved: new Signals(),
+				objectChanged: new Signals(),
+				materialChanged: new Signals(),
+				lightChanged: new Signals(),
+				sceneEnvironmentChanged: new Signals(),
+				sceneGraphChanged: new Signals(),
+				historyChanged: new Signals(),
+				windowResize: new Signals(),
+				modeChanged: new Signals()
+			};
+
+			// Editor
+			class Editor {
+				constructor() {
+					this.scene = new THREE.Scene();
+					this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+					this.camera.position.set(5, 5, 5);
+					this.renderer = new THREE.WebGLRenderer({ antialias: true });
+					this.renderer.setSize(window.innerWidth - 350, window.innerHeight);
+					this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+					this.selected = null;
+					this.objects = [];
+					this.lights = [];
+					this.currentLight = null;
+					this.actionHistory = [];
+					this.historyIndex = -1;
+					this.config = { autosave: true };
+					this.storage = {
+						get: (callback) => {
+							const state = localStorage.getItem('scene');
+							if (state) callback(JSON.parse(state));
+							else callback(null);
+						},
+						set: (state) => localStorage.setItem('scene', JSON.stringify(state)),
+						init: (callback) => callback()
+					};
+					this.mode = 'model';
+					this.composer = new EffectComposer(this.renderer);
+					const renderPass = new RenderPass(this.scene, this.camera);
+					this.composer.addPass(renderPass);
+					const contrastShader = {
+						uniforms: {
+							tDiffuse: { value: null },
+							contrast: { value: 1.0 }
+						},
+						vertexShader: `
+							varying vec2 vUv;
+							void main() {
+								vUv = uv;
+								gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+							}
+						`,
+						fragmentShader: `
+							uniform sampler2D tDiffuse;
+							uniform float contrast;
+							varying vec2 vUv;
+							void main() {
+								vec4 color = texture2D(tDiffuse, vUv);
+								color.rgb = ((color.rgb - 0.5) * contrast) + 0.5;
+								gl_FragColor = color;
+							}
+						`
+					};
+					this.contrastPass = new ShaderPass(contrastShader);
+					this.composer.addPass(this.contrastPass);
+					const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.5, 0.4, 0.85);
+					bloomPass.enabled = false;
+					this.composer.addPass(bloomPass);
+				}
+				select(obj) {
+					this.selected = obj;
+					signals.objectSelected.dispatch(obj);
+				}
+				getObjectState(obj) {
+					if (!obj) return null;
+					if (obj.isMesh) {
+						return {
+							type: 'mesh',
+							position: obj.position.clone(),
+							rotation: [obj.rotation.x, obj.rotation.y, obj.rotation.z],
+							scale: obj.scale.clone(),
+							material: {
+								type: obj.material.type,
+								color: obj.material.color.getHex()
+							}
+						};
+					} else if (obj.isLight) {
+						return {
+							type: 'light',
+							lightType: obj.type.toLowerCase(),
+							position: obj.position.clone(),
+							intensity: obj.intensity,
+							color: obj.color.getHex()
+						};
+					}
+				}
+				applyObjectState(obj, state) {
+					if (!obj || !state) return;
+					if (state.type === 'mesh') {
+						obj.position.copy(state.position);
+						obj.rotation.set(state.rotation[0], state.rotation[1], state.rotation[2]);
+						obj.scale.copy(state.scale);
+						if (obj.material.type === state.material.type) {
+							obj.material.color.setHex(state.material.color);
+						}
+					} else if (state.type === 'light') {
+						obj.position.copy(state.position);
+						obj.intensity = state.intensity;
+						obj.color.setHex(state.color);
+					}
+					signals.objectChanged.dispatch(obj);
+				}
+				addAction(action) {
+					this.actionHistory = this.actionHistory.slice(0, this.historyIndex + 1);
+					this.actionHistory.push(action);
+					this.historyIndex++;
+					signals.historyChanged.dispatch();
+				}
+				undo() {
+					if (this.historyIndex < 0) return;
+					const action = this.actionHistory[this.historyIndex];
+					if (action.type === 'add') {
+						const obj = this.scene.getObjectByProperty('uuid', action.object.uuid);
+						if (obj) {
+							this.scene.remove(obj);
+							if (obj.isMesh) this.objects.splice(this.objects.indexOf(obj), 1);
+							else if (obj.isLight) this.lights.splice(this.lights.indexOf(obj), 1);
+							signals.objectRemoved.dispatch(obj);
+						}
+					} else if (action.type === 'remove') {
+						const obj = action.object;
+						this.scene.add(obj);
+						if (obj.isMesh) this.objects.push(obj);
+						else if (obj.isLight) this.lights.push(obj);
+						signals.objectAdded.dispatch(obj);
+					} else if (action.type === 'modify') {
+						const obj = this.scene.getObjectByProperty('uuid', action.uuid);
+						this.applyObjectState(obj, action.prevState);
+					}
+					this.historyIndex--;
+					signals.historyChanged.dispatch();
+					showNotification('success', 'Action undone');
+				}
+				redo() {
+					if (this.historyIndex >= this.actionHistory.length - 1) return;
+					this.historyIndex++;
+					const action = this.actionHistory[this.historyIndex];
+					if (action.type === 'add') {
+						const obj = action.object;
+						this.scene.add(obj);
+						if (obj.isMesh) this.objects.push(obj);
+						else if (obj.isLight) this.lights.push(obj);
+						signals.objectAdded.dispatch(obj);
+					} else if (action.type === 'remove') {
+						const obj = this.scene.getObjectByProperty('uuid', action.object.uuid);
+						if (obj) {
+							this.scene.remove(obj);
+							if (obj.isMesh) this.objects.splice(this.objects.indexOf(obj), 1);
+							else if (obj.isLight) this.lights.splice(this.lights.indexOf(obj), 1);
+							signals.objectRemoved.dispatch(obj);
+						}
+					} else if (action.type === 'modify') {
+						const obj = this.scene.getObjectByProperty('uuid', action.uuid);
+						this.applyObjectState(obj, action.newState);
+					}
+					signals.historyChanged.dispatch();
+					showNotification('success', 'Action redone');
+				}
+				createObject(type) {
+					let geometry, material = new THREE.MeshStandardMaterial({ color: 0x888888 });
+					switch (type) {
+						case 'cube': geometry = new THREE.BoxGeometry(); break;
+						case 'sphere': geometry = new THREE.SphereGeometry(0.5, 32, 32); break;
+						case 'cone': geometry = new THREE.ConeGeometry(0.5, 1, 32); break;
+						case 'torus': geometry = new THREE.TorusGeometry(0.5, 0.2, 16, 100); break;
+						case 'knot': geometry = new THREE.TorusKnotGeometry(0.5, 0.15, 100, 16); break;
+						case 'cylinder': geometry = new THREE.CylinderGeometry(0.5, 0.5, 1, 32); break;
+					}
+					const mesh = new THREE.Mesh(geometry, material);
+					mesh.position.set(Math.random() * 2 - 1, 0, Math.random() * 2 - 1);
+					this.scene.add(mesh);
+					this.objects.push(mesh);
+					this.addAction({ type: 'add', object: mesh });
+					signals.objectAdded.dispatch(mesh);
+					this.select(mesh);
+					showNotification('success', `${type.charAt(0).toUpperCase() + type.slice(1)} added`);
+				}
+				addLight(type) {
+					let light;
+					switch (type) {
+						case 'directional':
+							light = new THREE.DirectionalLight(0xffffff, 0.5);
+							light.position.set(5, 5, 5);
+							break;
+						case 'point':
+							light = new THREE.PointLight(0xffffff, 0.5, 100);
+							light.position.set(0, 2, 0);
+							break;
+						case 'spot':
+							light = new THREE.SpotLight(0xffffff, 0.5);
+							light.position.set(0, 5, 0);
+							break;
+					}
+					this.scene.add(light);
+					this.lights.push(light);
+					this.addAction({ type: 'add', object: light });
+					signals.objectAdded.dispatch(light);
+					this.currentLight = light;
+					signals.lightChanged.dispatch();
+					showNotification('success', `${type.charAt(0).toUpperCase() + type.slice(1)} light added`);
+				}
+				centerObject() {
+					if (!this.selected || !this.selected.isMesh) return;
+					const prevState = this.getObjectState(this.selected);
+					this.selected.position.set(0, 0, 0);
+					const newState = this.getObjectState(this.selected);
+					this.addAction({ type: 'modify', uuid: this.selected.uuid, prevState, newState });
+					signals.objectChanged.dispatch(this.selected);
+					showNotification('success', 'Object centered');
+				}
+				duplicateObject() {
+					if (!this.selected || !this.selected.isMesh) return;
+					const clone = this.selected.clone();
+					clone.position.add(new THREE.Vector3(0.5, 0, 0.5));
+					this.scene.add(clone);
+					this.objects.push(clone);
+					this.addAction({ type: 'add', object: clone });
+					signals.objectAdded.dispatch(clone);
+					this.select(clone);
+					showNotification('success', 'Object duplicated');
+				}
+				deleteObject() {
+					if (!this.selected) return;
+					const obj = this.selected;
+					this.scene.remove(obj);
+					if (obj.isMesh) this.objects.splice(this.objects.indexOf(obj), 1);
+					else if (obj.isLight) this.lights.splice(this.lights.indexOf(obj), 1);
+					this.addAction({ type: 'remove', object: obj });
+					signals.objectRemoved.dispatch(obj);
+					this.select(null);
+					showNotification('success', 'Object deleted');
+				}
+				setMode(mode) {
+					this.mode = mode;
+					signals.modeChanged.dispatch(mode);
+				}
+				toJSON() {
+					return {
+						objects: this.objects.map(obj => ({
+							uuid: obj.uuid,
+							type: obj.geometry.type,
+							position: obj.position.toArray(),
+							rotation: [obj.rotation.x, obj.rotation.y, obj.rotation.z],
+							scale: obj.scale.toArray(),
+							material: { color: obj.material.color.getHex() }
+						})),
+						lights: this.lights.map(light => ({
+							uuid: light.uuid,
+							type: light.type.toLowerCase(),
+							position: light.position.toArray(),
+							intensity: light.intensity,
+							color: light.color.getHex()
+						})),
+						selected: this.selected ? this.selected.uuid : null
+					};
+				}
+				async fromJSON(json) {
+					this.scene.clear();
+					this.objects = [];
+					this.lights = [];
+					for (const objData of json.objects) {
+						let geometry;
+						switch (objData.type) {
+							case 'BoxGeometry': geometry = new THREE.BoxGeometry(); break;
+							case 'SphereGeometry': geometry = new THREE.SphereGeometry(0.5, 32, 32); break;
+							case 'ConeGeometry': geometry = new THREE.ConeGeometry(0.5, 1, 32); break;
+							case 'TorusGeometry': geometry = new THREE.TorusGeometry(0.5, 0.2, 16, 100); break;
+							case 'TorusKnotGeometry': geometry = new THREE.TorusKnotGeometry(0.5, 0.15, 100, 16); break;
+							case 'CylinderGeometry': geometry = new THREE.CylinderGeometry(0.5, 0.5, 1, 32); break;
+						}
+						const material = new THREE.MeshStandardMaterial({ color: objData.material.color });
+						const mesh = new THREE.Mesh(geometry, material);
+						mesh.uuid = objData.uuid;
+						mesh.position.fromArray(objData.position);
+						mesh.rotation.set(...objData.rotation);
+						mesh.scale.fromArray(objData.scale);
+						this.scene.add(mesh);
+						this.objects.push(mesh);
+						signals.objectAdded.dispatch(mesh);
+					}
+					for (const lightData of json.lights) {
+						let light;
+						switch (lightData.type) {
+							case 'directionallight':
+								light = new THREE.DirectionalLight(lightData.color, lightData.intensity);
+								break;
+							case 'pointlight':
+								light = new THREE.PointLight(lightData.color, lightData.intensity, 100);
+								break;
+							case 'spotlight':
+								light = new THREE.SpotLight(lightData.color, lightData.intensity);
+								break;
+						}
+						light.uuid = lightData.uuid;
+						light.position.fromArray(lightData.position);
+						this.scene.add(light);
+						this.lights.push(light);
+						signals.objectAdded.dispatch(light);
+					}
+					if (json.selected) {
+						const obj = this.scene.getObjectByProperty('uuid', json.selected);
+						if (obj) this.select(obj);
+					}
+				}
+			}
+
+			// Viewport
+			class Viewport {
+				constructor(editor) {
+					this.editor = editor;
+					this.dom = editor.renderer.domElement;
+					this.dom.id = 'viewport';
+					this.gridHelper = null;
+					this.gridType = 'standard';
+					this.gridSize = 10;
+					this.gridDivisions = 10;
+					this.stats = { objects: 0, vertices: 0, fps: 0 };
+					this.lastTime = performance.now();
+					this.frames = 0;
+					this.createGrid();
+					this.setupUI();
+					this.animate();
+					signals.windowResize.add(() => this.onResize());
+					signals.objectSelected.add(() => this.updateUI());
+					signals.objectAdded.add(() => this.updateStats());
+					signals.objectRemoved.add(() => this.updateStats());
+				}
+				createGrid() {
+					if (this.gridHelper) this.editor.scene.remove(this.gridHelper);
+					const size = new THREE.Vector3(10000);
+					const geometry = new THREE.MeshGeometry(size, size);
+					geometry.rotateX(-Math.PI / 2);
+					const fragmentShader = `
+						uniform float gridSize;
+						uniform float gridDivisions;
+						uniform vec3 gridColor;
+						uniform vec3 majorGridColor;
+						varying vec3 vWorldPosition;
+						void main() {
+							vec2 coord = vWorldPosition.xz / gridSize;
+							vec2 grid = abs(fract(coord * gridDivisions - 0.5) - 0.5) / fwidth(coord * gridDivisions);
+							float line = min(grid.x, grid.y);
+							float majorLine = min(mod(coord.x * gridDivisions, 1.0), mod(coord.y * gridDivisions));
+							vec3 color = mix(gridColor, majorGridColor, step(0.1, majorLine));
+							gl_FragColor = vec4(color, 1.0 - min(line, 1.0));
+						}
+					`;
+					const material = new THREE.MeshMaterial({
+						uniforms: {
+							gridSize: { value: gridSize },
+							gridDivisions: { value: this.gridDivisions },
+							gridColor: { value: new THREE.Color(0xa0a0a0)) },
+							majorGridColor: { value: new THREE.Color(0x606060)) }
+						},
+						vertexShader: `
+							varying vec3 vWorldPosition;
+							void main() {
+								vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
+								gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1);
+							}
+						`,
+						fragmentShader: fragmentShader,
+						transparent: true,
+						side: THREE.DoubleSide
+					});
+					this.gridHelper = new THREE.Mesh(geometry, material);
+					gridHelper.position.set(0, this-0.01, 0);
+					gridHelper.visible = true;
+					this.scene.add(gridHelper);
+				}
+				setupUI() {
+					const header = document.createElement('div');
+					header.className = 'header-bar';
+					header.innerHTML = `
+						<div>Drag to rotate | Scroll to zoom | Shift + drag to pan</div>
+						<div>
+							<button id="undo-btn" disabled>Undo</button>
+							<button id="redo-btn" disabled>Redo</button>
+							<button id="help-btn">Help</button>
+						</div>
+					</div>
+					`;
+					this.dom.parentNode.appendChild(header);
+					const modeButtons = document.createElement('div');
+					modeButtons.style.position = 'absolute';
+					modeButtons.style.top = '50px';
+					modeButtons.style.left = '10px';
+					modeButtons.innerHTML = `
+							<button class="selected" data-mode="model">Model</button>
+							<button data-mode="material">Material</button>
+							<button data-mode="lighting">Lighting</button>
+						</div>
+						`;
+					this.dom.parentNode.appendChild(modeButtons);
+					const actionButtons = document.createElement('div');
+					actionButtons.style.position = 'absolute';
+					actionButtons.style.top = '50px';
+					actionButtons.style.right = '10px';
+					actionButtons.innerHTML = `
+							<label>
+							Import
+							<input type="file" id="model-upload" accept=".gltf,.glb" hidden>
+							</label>
+							<button id="add-light">Add Light</button>
+							<button id="export-btn">Export</button>
+						</div>
+						</div>
+						`;
+					this.dom.parentNode.appendChild(actionButtons);
+					const statsDiv = document.createElement('div');
+					statsDiv.id = 'stats';
+					statsDiv.className = 'stats';
+					this.dom.parentNode.appendChild(statsDiv);
+					this.updateStats();
+					// Event Listeners
+					header.querySelector('#undo-btn').addEventListener('click', () => this.editor.undo());
+					header.querySelector('#redo-btn').addEventListener('click', () => this.editor.redo());
+					header.querySelector('#help-btn').addEventListener('click', () => document.querySelector('#modal').style.display = 'flex');
+					document.querySelector('.modal-close').addEventListener('click', () => document.querySelector('#modal').style.display = 'none');
+					const modeBtns = modeButtons.querySelectorAll('button');
+					forEach(btn => {
+						btn.addEventListener('click', () => {
+							modeBtns.forEach(b => b.classList.remove('selected'));
+							btn.classList.add('selected');
+							this.editor.setMode(btn.dataset.mode);
+						});
+					});
+					const modelUpload = actionButtons.querySelector('#model-upload');
+					modelUpload.addEventListener('change', (e) => {
+						if (e.target.files.length === 0) return;
+						const file = e.target.files[0];
+						const loader = new GLTFLoader();
+						const dracoLoader = new DRACOLoader();
+						dracoLoader.setDecoderPath('https://unpkg.com/three/examples/jsm/libs/draco/');
+						loader.setDRACOLoader(dracoLoader);
+						Document.querySelector('#loading-indicator').style.display = 'block';
+						const reader = new FileReader();
+						reader.onload = () => {
+							loader.parse(reader.result, '', (gltf) => {
+							const model = gltf.scene;
+							this.editor.scene.add(model);
+							this.editor.objects.push(model);
+							this.editor.addAction({ type: 'add', object: model });
+							signals.objectAdded.dispatch(model);
+							this.editor.select(model);
+							document.querySelector('#loading-indicator').style.display = 'none';
+							showNotification('success', 'Model imported');
+						}, () => {
+							document.querySelector('#loading-indicator').style.display = 'none';
+							showNotification('error', 'Failed to import model');
+						});
+						reader.readAsArrayBuffer(file);
+					});
+					actionButtons.querySelector('#add-light').addEventListener('click', () => this.editor.addLight('directional'));
+					ActionButtons.querySelector('#export-btn').addEventListener('click', () => {
+						const exporter = new GLTFExporter();
+						exporter.parse(this.editor.scene, (gltf) => {
+							const blob = new Blob([JSON.stringify(gltf, null, 2)], { type: 'application/json' });
+							const url = URL.createObjectURL(blob);
+							const link = document.createElement('a');
+							link.href = url;
+							link.download = 'scene.gltf';
+							link.click();
+							URL.revokeObjectURL(url);
+							showNotification('success', 'Scene exported');
+						}, { binary: false });
+					});
+				}
+				updateUI() {
+					const undoBtn = document.querySelector('#undo-btn');
+					const redoBtn = document.querySelector('#redo-btn');
+					undoBtn.disabled = this.editor.historyIndex < 0;
+					redoBtn.disabled = this.editor.historyIndex >= this.editor.actionHistory.length - 1;
+				}
+				updateStats() {
+					this.stats.objects = this.editor.objects.length;
+					this.stats.vertices = this.editor.objects.reduce((acc, obj) => {
+						return acc + (obj.geometry ? obj.geometry.attributes.position.count : 0);
+					}, 0);
+					const now = performance.now();
+					this.frames++;
+					if (now - this.lastTime >= 1000) {
+						this.stats.fps = Math.round(this.frames * 1000 / (now - this.lastTime));
+						this.lastTime = now;
+						this.frames = 0;
+					}
+					const statsDiv = document.querySelector('#stats');
+					if (statsDiv) {
+						statsDiv.textContent = `Objects: ${this.stats.objects} | Vertices: ${this.stats.vertices} | FPS: ${this.stats.fps}`;
+					}
+				}
+				onResize() {
+					const width = window.innerWidth - (window.innerWidth <= 600 ? 0 : 350);
+					const height = window.innerHeight - (window.innerWidth <= 600 ? 320 : 0);
+					this.editor.camera.aspect = width / height;
+					this.editor.camera.updateProjectionMatrix();
+					this.editor.renderer.setSize(width, height);
+					this.editor.composer.setSize(width, height);
+				}
+				animate() {
+					requestAnimationFrame(() => this.animate());
+					this.controls.update();
+					this.updateStats();
+					this.editor.composer.render();
+				}
+			}
+
+			// Sidebar
+			class Sidebar {
+				constructor(editor) {
+					this.editor = editor;
+					this.dom = document.createElement('div');
+					this.dom.id = 'sidebar';
+					const objectsPanel = document.createElement('div');
+					objectsPanel.className = 'Panel';
+					objectsPanel.innerHTML = `
+						<h3>Objects</h3>
+						<select id="object-select"></select>
+						<div>
+							<button id="center-btn" disabled>Center</button>
+							<button id="duplicate-btn" disabled>Duplicate</button>
+							<button id="delete-btn" disabled>Delete</button>
+						</div>
+					`;
+					const shapesPanel = document.createElement('div');
+					shapesPanel.className = 'Panel';
+					shapesPanel.innerHTML = `
+						<h3>Shapes</h3>
+						<div>
+							<button data-shape="cube">Cube</button>
+							<button data-shape="sphere">Sphere</button>
+							<button data-shape="cone">Cone</button>
+							<button data-shape="torus">Torus</button>
+							<button data-shape="knot">Knot</button>
+							<button data-shape="cylinder">Cylinder</button>
+						</div>
+					`;
+					const gridPanel = document.createElement('div');
+					gridPanel.className = 'Panel';
+					gridPanel.innerHTML = `
+						<h3>Grid</h3>
+						<div class="Row">
+							<select id="grid-type">
+								<option value="standard">Standard</option>
+								<option value="polar">Polar</option>
+								<option value="hexagonal">Hexagonal</option>
+								<option value="dots">Dots</option>
+							</select>
+						</div>
+						<div class="slider-container">
+							<label>Size</label>
+							<input type="range" id="grid-size" min="1" max="100" value="10" step="1">
+							<span id="grid-size-value">10</span>
+						</div>
+						<div class="slider-container">
+							<label>Divisions</label>
+							<input type="range" id="grid-divisions" min="1" max="20" value="10" step="1">
+							<span id="grid-divisions-value">10</span>
+						</div>
+						<div class="Row">
+							<button id="toggle-grid">Toggle</button>
+						</div>
+					`;
+					const envPanel = document.createElement('div');
+					envPanel.className = 'Panel';
+					envPanel.innerHTML = `
+						<h3>Environment</h3>
+						<select id="env-select">
+							<option value="studio">Studio</option>
+							<option value="sunset">Sunset</option>
+							<option value="night">Night</option>
+							<option value="forest">Forest</option>
+						</select>
+					</div>
+					`;
+					this.dom.appendChild(objectsPanel);
+					this.dom.appendChild(shapesPanel);
+					this.dom.appendChild(gridPanel);
+					this.dom.appendChild(envPanel);
+					// Event Listeners
+					const updateButtons = () => {
+						const obj = this.editor.selected;
+						const isMesh = obj && obj.isMesh;
+						objectsPanel.querySelector('#center-btn').disabled = !isMesh;
+						objectsPanel.querySelector('#duplicate-btn').disabled = !isMesh;
+						objectsPanel.querySelector('#delete-btn').disabled = !obj;
+					};
+					const objectSelect = objectsPanel.querySelector('#object-select');
+					const updateObjectSelect = () => {
+						objectSelect.innerHTML = '';
+						this.editor.objects.forEach(obj => {
+							const option = document.createElement('option');
+							op.value = obj.uuid;
+							op.textContent = obj.name || `Object-${obj.id}`;
+							if (obj === this.editor.selected) {
+							op.selected = true;
+							}
+							opSelect.appendChild(op);
+							});
+							updateButtons();
+							});
+						};
+						updateObjectSelect();
+						signals.objectSelected.add(updateObjectSelect);
+						signals.objectAdded.add(updateObjectSelect);
+						signals.objectRemoved.add(updateObjectSelect);
+						objectsPanel.querySelector('#center-btn').addEventListener('click', () => this.centerObject());
+						objectsPanel.querySelector('#duplicate-btn').addEventListener('click', () => this.editor.duplicateObject());
+						objectsPanel.querySelector('#delete-btn').addEventListener('click', () => this.editor.deleteObject());
+						ShapesPanel.querySelectorAll('button[data-shape]').forEach(btn => {
+							btn.addEventListener('click', () => this.editor.createObject(btn.dataset.shape));
+						});
+						gridPanel.querySelector('#grid-type').addEventListener('change', (e) => {
+							this.views.gridType = e.target.value;
+							this.views.createGrid();
+							showNotification('success', `Grid type changed to ${e.target.value}`);
+						});
+						const gridSizeInput = gridPanel.querySelector('#grid-size');
+						gridSizeInput.addEventListener('input', () => {
+							this.views.gridSize = parseFloat(gridSizeInput.value);
+							if (this.views.gridHelper) {
+							this.views.gridHelper.material.uniforms.gridSize.value = this.gridSize;
+							}
+							gridPanel.querySelector('#grid-size-value').textContent = gridSizeInput.value;
+						});
+						const gridDivisionsInput = gridPanel.querySelector('#grid-divisions');
+						gridDivisionsInput.addEventListener('input', () => {
+							this.views.gridDivisions = parseInt(gridDivisionsInput.value);
+							if (this.views.gridHelper) {
+							this.views.gridHelper.material.uniforms.gridDivisions.value = this.gridDivisions;
+							}
+							gridPanel.querySelector('#grid-divisions-value').textContent = gridDivisionsInput.value;
+						});
+						gridPanel.querySelector('#toggle-grid').addEventListener('click', () => {
+							if (this.views.gridHelper) {
+							this.views.gridHelper.visible = !this.views.gridHelper.visible;
+							ShowNotification('success', `Grid ${this.gridHelper.visible ? 'shown' : 'hidden'}`);
+							}
+						});
+						EnvPanel.querySelector('#env-select').addEventListener('change', (e) => {
+							const envMaps = {
+							studio: 'https://dl.polyhaven.com/file/ph-assets/HDRIs/hdr/1k/studio_small_08_1k.hdr',
+							sunset: 'https://dl.polyhaven.com/file/ph-assets/HDRIs/hdr/1k/sunset_in_the_chalk_quarry_1k.hdr',
+							night: 'https://dl.polyhaven.com/file/ph-assets/HDRIs/hdr/1k/venice_dawn_1k.hdr',
+							forest: 'https://dl.polyhaven.com/file/ph-assets/HDRIs/hdr/1k/forest_02_1k.hdr'
+							};
+							const rgbeLoader = new RGBELoader();
+							Document.querySelector('#loading-indicator').style.display = 'block';
+							rgbeLoader.load(envMaps[e.target.value], (texture) => {
+							texture.mapping = THREE.EquirectangularReflectionMapping;
+							this.editor.scene.environment = texture;
+							this.editor.scene.background = texture;
+							signals.sceneEnvironmentChanged.dispatch();
+							Document.querySelector('#loading-indicator').style.display = 'none';
+							ShowNotification('success', `Environment set to ${e.target.value}`);
+							}, undefined, () => {
+							Document.querySelector('#loading-indicator').style.display = 'none';
+							ShowNotification('error', 'Failed to load environment');
+							});
+						});
+					}
+				}
+
+				// BottomControls
+				class BottomControls {
+					function constructor(BottomControls) {
+						this.editor = editor;
+						this.dom = document.createElement('div');
+						this.dom.id = 'bottom-controls';
+						this.dom.className = 'bottom-controls';
+						const tabsPanel = document.createElement('div');
+						tabsPanel.className = 'TabbedPanel';
+						tabsPanel.innerHTML = `
+							<div class="Tabs">
+							<span class="Tab selected" data-tab="transform">Transform</span>
+							<span class="Tab" data-tab="material">Material</span>
+							<span class="Tab" data-tab="lighting">Lighting</span>
+							<span class="Tab" data-tab="render">Render</span>
+							</div>
+							<div class="Panels">
+							<div class="Panel" id="transform-panel">
+							<div class="slider-container">
+							<label>Position X</label>
+							<input type="range" id="pos-x" min="-10" max="10" step="0.1" value="0">
+							<span id="pos-x-value">0.0</span>
+							</div>
+							<div class="slider-container">
+							<label>Position Y</label>
+							<input type="range" id="pos-y" min="-10" max="10" step="0.1" value="0">
+							<span id="pos-y-value">0.0</span>
+							</div>
+							<div class="slider-container">
+							<label>Rotation Y</label>
+							<input type="range" id="rot-y" min="-3.14" max="3.14" step="0.01" value="0">
+							<span id="rot-y-value">0.00</span>
+							</div>
+							</div>
+							<div class="Panel" id="material-panel" style="display: none;">
+							<div class="Row">
+							<button data-material="standard" class="selected">Standard</button>
+							<button data-material="basic">Basic</button>
+							</div>
+							<div class="slider-container">
+							<label>Color</label>
+							<div class="color-picker" id="material-color">
+							<div class="color-option active" style="background-color: #888888;" data-color="0x888888"></div>
+							<div class="color-option" style="background-color: #ff0000;" data-color="0xff0000"></div>
+							<div class="color-option" style="background-color: #00cc00;" data-color="0x00cc00"></div>
+							</div>
+							</div>
+							</div>
+							<div class="Panel" id="lighting-panel" style="display: none;">
+							<select id="light-select">
+							<option value="">Select Light</option>
+							</select>
+							<div class="slider-container">
+							<label>Intensity</label>
+							<input type="range" id="light-intensity" min="0" max="2" step="0.01" value="0.5">
+							<span id="light-intensity-value">0.50</span>
+							</div>
+							</div>
+							<div class="Panel" id="render-panel" style="display: none;">
+							<div class="slider-container">
+							<label>Contrast</label>
+							<input type="range" id="tone-contrast" min="0.5" max="1.5" step="0.01" value="1">
+							<span id="tone-contrast-value">1.00</span>
+							</div>
+							<div class="Row">
+							<button id="toggle-bloom">Toggle Bloom</button>
+							</div>
+							</div>
+							</div>
+							`;
+							// Event Listeners
+							const tabs = tabsPanel.querySelectorAll('.Tab');
+							const panels = tabsPanel.querySelectorAll('.Panel');
+							tabs.forEach(tab => {
+							tab.addEventListener('click', () => {
+							tabs.forEach(t => t.classList.remove('selected'));
+							Panels.forEach(p => p.style.display = 'none');
+							tab.classList.add('selected');
+							tabsPanel.querySelector(`#${tab.dataset.tab}-panel`).style.display = 'block';
+							});
+							});
+							const transformPanel = tabsPanel.querySelector('#transform-panel');
+							const updateTransform = () => {
+							const obj = this.editor.selected;
+							const isMesh = obj && obj.isMesh;
+							if (isMesh) {
+							const posX = transformPanel.querySelector('#pos-x');
+							const posY = transformPanel.querySelector('#pos-y');
+							const rotY = transformPanel.querySelector('#rot-y');
+							posX.value = obj.position.x;
+							posY.value = obj.position.y;
+							rotY.value = obj.rotation.y;
+							TransformPanel.querySelector('#pos-x-value').textContent = parseFloat(posX.value).toFixed(1);
+							TransformPanel.querySelector('#pos-y-value').textContent = parseFloat(posY.value).toFixed(1);
+							TransformPanel.querySelector('#rot-y-value').textContent = parseFloat(rotY.value).toFixed(2);
+							}
+							};
+							updateTransform();
+							signals.objectSelected.add(updateTransform);
+							const handleTransform = (input, property, axis) => {
+							if (!this.editor.selected || !this.editor.selected.isMesh) {
+							const return;
+							const prevState = this.editor.getObjectState(this.editor.selected);
+							this.editor.selected[property][axis] = parseFloat(input.value);
+							const newState = this.editor.getObjectState(this.editor.selected);
+							this.editor.addAction({ type: 'modify', uuid: this.editor.selected.uuid, prevState, newState });
+							signals.objectChanged.dispatch(this.editor.selected);
+							updateTransform();
+							};
+							TransformPanel.querySelector('#pos-x').addEventListener('input', () => handleTransform('position', 'x', transformPanel.querySelector('#pos-x')));
+							TransformPanel.querySelector('#pos-y').addEventListener('input', () => handleTransform('position', 'y', transformPanel.querySelector('#pos-y')));
+							TransformPanel.querySelector('#rot-y').addEventListener('input', () => handleTransform('rotation', 'y', transformPanel.querySelector('#rot-y')));
+							const materialPanel = tabsPanel.querySelector('#material-panel');
+							const updateMaterial = () => {
+							const obj = this.editor.selected;
+							const isMesh = obj && obj.isMesh;
+							const materialButtons = materialPanel.querySelectorAll('button[data-material]');
+							const colorOptions = materialPanel.querySelectorAll('.color-option');
+							if (isMesh) {
+							materialButtons.forEach(btn => btn.classList.remove('selected'));
+							const materialType = materialPanel.querySelector(`button[data-material="${obj.material.type.toLowerCase().replace('material', '')}"]`);
+							if (materialType) materialType.classList.add('selected');
+							ColorOptions.forEach(opt => opt.classList.remove('active'));
+							const activeColor = Array.from(colorOptions).find(opt => parseInt(opt.dataset.color, 16) === obj.material.color.getHex());
+							if (activeColor) activeColor.classList.add('active');
+							}
+							};
+							updateMaterial();
+							signals.objectSelected.add(updateMaterial);
+							signals.materialChanged.add(updateMaterial);
+							materialButtons.forEach(btn => {
+							btn.addEventListener('click', () => {
+							if (!this.editor.selected || !this.editor.selected.isMesh) return;
+							materialButtons.forEach(b => b.classList.remove('selected'));
+							btn.classList.add('selected');
+							const prevState = this.editor.getObjectState(this.editor.selected);
+							const materialType = btn.dataset.material === 'standard' ? 'MeshStandardMaterial' : 'MeshBasicMaterial';
+							this.editor.selected.material = new THREE[materialType]({ color: this.editor.selected.material.color });
+							const newState = this.editor.getObjectState(this.editor.selected);
+							this.editor.addAction({ type: 'modify', uuid: this.editor.selected.uuid, prevState, newState });
+							signals.materialChanged.dispatch();
+							});
+							});
+							ColorOptions.forEach(opt => {
+							opt.addEventListener('click', () => {
+							if (!this.editor.selected || !this.editor.selected.isMesh) return;
+							ColorOptions.forEach(o => o.classList.remove('active'));
+							op.classList.add('active');
+							const prevState = this.editor.getObjectState(this.editor.selected);
+							this.editor.selected.material.color.setHex(parseInt(opt.dataset.color));
+							const newState = this.editor.getObjectState(this.editor.selected);
+							this.editor.addAction({ type: 'modify', uuid: this.editor.selected.uuid, prevState, newState });
+							signals.materialChanged.dispatch();
+							});
+							});
+							const lightingPanel = tabsPanel.querySelector('#lighting-panel');
+							const updateLighting = () => {
+							const lightSelect = lightingPanel.querySelector('#light-select');
+							lightSelect.innerHTML = '<option value="">Select Light</option>';
+							this.lights.forEach(light => {
+							const option = document.createElement('option');
+							op.value = light.uuid;
+							op.textContent = `${light.type} (${light.id})`;
+							if (light === this.currentLight) op.selected = true;
+							lightSelect.appendChild(op);
+							});
+							const intensityInput = lightingPanel.querySelector('#light-intensity');
+							if (this.currentLight) {
+							intensityInput.value = this.currentLight.intensity;
+							} else {
+							intensityInput.value = 0;
+							}
+							lightingPanel.querySelector('#light-intensity-value').textContent = parseFloat(intensityInput.value).toFixed(2);
+							};
+							updateLighting();
+							signals.lightChanged.add(updateLighting);
+							signals.objectAdded.add(updateLighting);
+							signals.objectRemoved.add(updateLighting);
+							lightSelect.addEventListener('change', () => {
+							const uuid = lightSelect.value;
+							this.currentLight = this.lights.find(light => light.uuid === uuid) || null;
+							updateLighting();
+							});
+							lightingPanel.querySelector('#light-intensity').addEventListener('input', () => {
+							if (!this.currentLight) return;
+							const prevState = this.getObjectState(this.currentLight);
+							this.currentLight.intensity = parseFloat(lightingPanel.querySelector('#light-intensity').value);
+							const newState = this.getObjectState(this.currentLight);
+							this.addAction({ type: 'modify', uuid: this.currentLight.uuid, prevState, newState });
+							signals.lightChanged.dispatch();
+							updateLighting();
+							});
+							const renderPanel = tabsPanel.querySelector('#render-panel');
+							const contrastInput = renderPanel.querySelector('#tone-contrast');
+							const contrastValue = renderPanel.querySelector('#tone-contrast-value');
+							contrastInput.addEventListener('input', () => {
+							this.contrastPass.uniforms.contrast.value = parseFloat(contrastInput.value);
+							contrastValue.textContent = parseFloat(contrastInput.value).toFixed(2);
+							});
+							const button toggleBloom = renderPanel.querySelector('#toggle-bloom');
+							toggleBloom.addEventListener('click', () => {
+							this.composer.passes[2].enabled = !this.composer.passes[2].enabled;
+							toggleBloom.classList.toggle('selected');
+							showNotification('success', `Bloom ${this.composer.passes[2].enabled ? 'enabled' : 'disabled'}`);
+							});
+							signals.modeChanged.add(mode => {
+							Panels.forEach(p => p.style.display = 'none');
+							const activePanel = tabsPanel.querySelector(`#${mode === 'model' ? 'transform' : mode}-panel`);
+							if (activePanel) activePanel.style.display = 'block';
+							});
+							}
+							}
+
+							// Toolbar
+							class Toolbar {
+							function constructor(Toolbar) {
+							this.editor = editor;
+							this.dom = document.createElement('div');
+							this.dom.id = 'toolbar';
+							}
+							}
+
+							// Menubar
+							function MenuBar() {
+							this.editor = editor;
+							this.dom = document.createElement('div');
+							this.dom.id = 'menubar';
+							const fileMenu = document.createElement('div');
+							fileMenu.className = 'menu';
+							fileMenu.innerHTML = `
+							<span class="title">File</span>
+							<div class="options">
+							<div class="option">New</div>
+							<div class="option">Import</div>
+							<div class="option">Export</div>
+							</div>
+							`;
+							const editMenu = document.createElement('div');
+							fileMenu.className = 'menu';
+							fileMenu.innerHTML = `
+							<span class="title">Edit</span>
+							<div class="options">
+							<div class="option">Undo</div>
+							<div class="option">Redo</div>
+							</div>
+							`;
+							const helpMenu = document.createElement('div');
+							helpMenu.className = 'menu';
+							helpMenu.innerHTML = `
+							<span class="title">Help</span>
+							<div class="options">
+							<div class="option">About</div>
+							</div>
+							`;
+							this.dom.appendChild(fileMenu);
+							this.dom.appendChild(editMenu);
+							this.dom.appendChild(helpMenu);
+							// Event Listeners
+							fileMenu.querySelectorAll('.option')[0].addEventListener('click', () => {
+							if (confirm('Clear the scene?')) {
+							this.scene.clear();
+							this.objects = [];
+							this.lights = [];
+							this.actionHistory = [];
+							this.historyIndex = -1;
+							signals.sceneGraphChanged.dispatch();
+							ShowNotification('success', 'Scene cleared');
+							}
+							});
+							fileMenu.querySelectorAll('.option')[1].addEventListener('click', () => document.querySelector('#model-upload').click());
+							fileMenu.querySelectorAll('.option')[2].addEventListener('click', () => document.querySelector('#export-btn').click());
+							editMenu.querySelectorAll('.option')[0].addEventListener('click', () => this.undo());
+							editMenu.querySelectorAll('.option')[1].addEventListener('click', () => this.redo());
+							helpMenu.querySelector('.option').addEventListener('click', () => document.querySelector('#modal').style.display = 'flex');
+							}
+							}
+
+							// Resizer
+							function Resizer() {
+							this.editor = editor;
+							this.dom = document.createElement('div');
+							this.dom.id = 'resizer';
+							let isDragging = false;
+							this.dom.addEventListener('mousedown', () => isDragging = true);
+							document.addEventListener('mousemove', (e) => {
+							if (isDragging) {
+							const width = window.innerWidth - e.clientX;
+							if (width >= 300 && width <= 500) {
+							this.dom.style.right = `${width}px`;
+							Document.querySelector('#sidebar').setAttribute('width', `${width}px`);
+							Document.querySelector('#viewport').setAttribute('right', `${width}px`);
+							Document.querySelector('#bottom-controls').setAttribute('right', `${width}px`);
+							signals.windowResize.dispatch();
+							}
+							}
+							});
+							document.addEventListener('DOMContentLoaded', () => isDragging = false);
+							}
+							}
+
+							// Notification System
+							function showNotification(type, message) {
+							const notification = document.getElementById('notification');
+							notification.innerHTML = `<div>${type === 'success' ? 'Success!' : 'Error'}</div><div>${message}</div>`;
+							notification.classList.add('show', type === 'error' ? 'error' : '');
+							setTimeout(() => notification.classList.remove('show', 'error'), 3000);
+							}
+
+							// Initialize
+							const editor = new Editor();
+							const viewport = new Viewport(editor);
+							const sidebar = new Sidebar(editor);
+							const bottomControls = new BottomControls(editor);
+							const toolbar = new Toolbar(editor);
+							const menubar = new Menubar(editor);
+							const resizer = new Resizer(editor);
+							document.body.appendChild(menubar.dom);
+							document.body.appendChild(viewport.dom);
+							document.body.appendChild(toolbar.dom);
+							document.body.appendChild(sidebar.dom);
+							document.body.appendChild(bottomControls.dom);
+							document.body.appendChild(resizer.dom);
+							editor.storage.init(() => {
+							editor.storage.get(async (state) => {
+							if (state) await editor.fromJSON(state);
+							const selected = this.selected ? this.selected : null;
+							if (selected) {
+							const obj = this.scene.getObjectByProperty('uuid', selected);
+							if (obj) this.select(obj);
+							}
+							});
+							const saveState = () => {
+							if (!this.config.autosave) return;
+							this.storage.set(this.toJSON());
+							};
+							signals.objectAdded.add(saveState);
+							signals.objectRemoved.add(saveState);
+							signals.objectChanged.add(saveState);
+							signals.materialChanged.add(saveState);
+							signals.lightChanged.add(saveState);
+							signals.sceneEnvironmentChanged.add(saveState);
+							});
+							// Drag and Drop
+							Document.addEventListener('dragover', (e) => {
+							e.preventDefault();
+							e.dataTransfer.dropEffect = 'copy';
+							});
+							Document.addEventListener('drop', (e) => {
+							e.preventDefault();
+							if (e.dataTransfer.types[0] === 'text/plain') return;
+							const files = e.dataTransfer.files;
+							if (files.length) {
+							const file = files[0];
+							if (file.name.endsWith('.gltf') || file.name.endsWith('.glb')) {
+							Document.querySelector('#model-upload').files = files;
+							Document.querySelector('#model-upload').dispatchEvent(new Event('change'));
+							}
+							}
+							});
+							// Click to Select
+							viewport.dom.addEventListener('click', (e) => {
+							const rect = this.dom.getBoundingClientRect();
+							const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+							const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+							const raycaster = new THREE.Raycaster();
+							raycaster.setFromCamera(new THREE.Vector2(x, y), this.camera);
+							const intersects = raycaster.intersectObjects(this.objects, true);
+							if (intersects.length) {
+							this.select(intersects[0].object);
+							} else {
+							this.select(null);
+							}
+							});
+							// Initial Setup
+							editor.addLight('directional');
+							viewport.createGrid();
+							signals.windowResize.dispatch();
+		</script>
+	</body>
+</html>
